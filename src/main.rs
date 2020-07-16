@@ -1,21 +1,24 @@
 use chrono::{ Date, Local };
 use iced::{
-    Application, Text, text_input, TextInput, button, Button, Settings, Column, Align, Element, Command
+    Application, Text, text_input, TextInput, button, Button, Settings, Column, Align, Element,
+    Command, Scrollable, scrollable, Container, Length
 };
 
 fn main() {
     ChatBox::run(Settings::default());
 }
 
+// Single chat
 #[derive(Debug)]
 struct Chat {
     post_date: Date<Local>,
     text: String,
 }
 
+// Collected Chat
 #[derive(Default)]
 struct ChatBox {
-    // scroll: scrollable::State,
+    scroll: scrollable::State,
     input: text_input::State,
     input_value: String,
     history: Vec<Chat>,
@@ -73,17 +76,27 @@ impl Application for ChatBox {
     }
 
     fn view(&mut self) -> Element<Message> {
-        Column::new()
+        let chat_history = self.history
+            .iter()
+            .fold(
+                Column::new().spacing(10),
+                |column, chat| {
+                    column
+                        .push(
+                            Column::new()
+                                .push(Text::new(&chat.post_date.to_string()))
+                        )
+                        .push(
+                            Column::new()
+                                .push(Text::new(&chat.text))
+                        )
+                }
+            );
+
+        let chat_box = Column::new()
             .padding(20)
-            // .align_items(Align::Left)
-            // .push(
-            //     self.history
-            //         .iter_mut()
-            //         .enumerate()
-            //         .fold(Text::new()
-            //         )
-            //         .into()
-            // )
+            .align_items(Align::Start)
+            .push(chat_history)
             .push(
                 TextInput::new(
                     &mut self.input,
@@ -102,7 +115,14 @@ impl Application for ChatBox {
             .push(
                 Button::new(&mut self.clear_button, Text::new("Clear"))
                     .on_press(Message::Cleared)
+            );
+
+        Scrollable::new(&mut self.scroll)
+            .padding(40)
+            .push(
+                Container::new(chat_box).width(Length::Fill).center_x(),
             )
             .into()
+        
     }
 }
