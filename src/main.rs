@@ -1,7 +1,7 @@
 use chrono::{ Date, Local };
 use iced::{
     Application, Text, text_input, TextInput, button, Button, Settings, Column, Align, Element,
-    Command, Scrollable, scrollable, Container, Length
+    Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row, Rectangle
 };
 
 fn main() {
@@ -15,15 +15,21 @@ struct Chat {
     text: String,
 }
 
-// Collected Chat
+// Chat box
 #[derive(Default)]
 struct ChatBox {
-    scroll: scrollable::State,
     input: text_input::State,
     input_value: String,
-    history: Vec<Chat>,
+    chat_history: ChatHistory,
     post_button: button::State,
     clear_button: button::State,
+}
+
+// Chat history
+#[derive(Debug, Default)]
+struct ChatHistory{
+    scroll: scrollable::State,
+    chats: Vec<Chat>,
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +70,7 @@ impl Application for ChatBox {
                         text: post_message.to_string(),
                     };
 
-                    self.history.push(new_post);
+                    self.chat_history.chats.push(new_post);
                     self.input_value.clear();
                 }
             }
@@ -76,27 +82,60 @@ impl Application for ChatBox {
     }
 
     fn view(&mut self) -> Element<Message> {
-        let chat_history = self.history
+        let header_title = Text::new("Simple Chat")
+            .horizontal_alignment(HorizontalAlignment::Left)
+            .size(30);
+
+        let chat_history = self.chat_history.chats
             .iter()
             .fold(
-                Column::new().spacing(10),
+                Column::new().spacing(4).align_items(Align::Start).width(Length::Fill).padding(5),
                 |column, chat| {
                     column
                         .push(
                             Column::new()
-                                .push(Text::new(&chat.post_date.to_string()))
+                                .push(
+                                    Text::new(&chat.post_date.to_string())
+                                        .horizontal_alignment(HorizontalAlignment::Left)
+                                )
                         )
                         .push(
                             Column::new()
-                                .push(Text::new(&chat.text))
+                                .push(
+                                    Text::new(&chat.text)
+                                        .horizontal_alignment(HorizontalAlignment::Left)
+                                        .size(30)
+                                )
                         )
                 }
             );
 
-        let chat_box = Column::new()
+        let scrollable_history = Scrollable::new(&mut self.chat_history.scroll)
+            .padding(40)
+            .height(Length::FillPortion(4))
+            .push(
+                Container::new(chat_history).width(Length::Fill).center_x(),
+            );
+
+        let operation_buttons = Column::new()
+            .push(
+                Row::new()
+                    .push(
+                        Button::new(&mut self.post_button, Text::new("Post"))
+                            .on_press(Message::MessagePosted)
+                    )
+                    .push(
+                        Button::new(&mut self.clear_button, Text::new("Clear"))
+                            .on_press(Message::Cleared)
+                    )
+            )
+            .align_items(Align::End)
+            .width(Length::Fill);
+
+        Column::new()
             .padding(20)
-            .align_items(Align::Start)
-            .push(chat_history)
+            .push(header_title)
+            .push(scrollable_history)
             .push(
                 TextInput::new(
                     &mut self.input,
@@ -108,21 +147,7 @@ impl Application for ChatBox {
                     .size(30)
                     .on_submit(Message::MessagePosted)
             )
-            .push(
-                Button::new(&mut self.post_button, Text::new("Post"))
-                    .on_press(Message::MessagePosted)
-            )
-            .push(
-                Button::new(&mut self.clear_button, Text::new("Clear"))
-                    .on_press(Message::Cleared)
-            );
-
-        Scrollable::new(&mut self.scroll)
-            .padding(40)
-            .push(
-                Container::new(chat_box).width(Length::Fill).center_x(),
-            )
+            .push(operation_buttons)
             .into()
-        
     }
 }
