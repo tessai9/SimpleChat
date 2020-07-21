@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 iced = "0.1.1"
 chrono = "0.4.13"
+libp2p = "0.22.0"
+assert-type-eq = "0.1.0"

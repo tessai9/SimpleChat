@@ -1,10 +1,12 @@
 use chrono::{ Date, Local };
 use iced::{
     Application, Text, text_input, TextInput, button, Button, Settings, Column, Align, Element,
-    Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row, Rectangle
+    Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row
 };
+mod ip_input;
 
 fn main() {
+    ip_input::display_ip_input();
     ChatBox::run(Settings::default());
 }
 
