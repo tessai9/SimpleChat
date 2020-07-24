@@ -6,7 +6,6 @@ use iced::{
 mod ip_input;
 
 fn main() {
-    ip_input::display_ip_input();
     ChatBox::run(Settings::default());
 }
 
@@ -22,9 +21,12 @@ struct Chat {
 struct ChatBox {
     input: text_input::State,
     input_value: String,
+    input_ip: text_input::State,
+    input_ip_value: String,
     chat_history: ChatHistory,
     post_button: button::State,
     clear_button: button::State,
+    connect_button: button::State,
 }
 
 // Chat history
@@ -38,7 +40,9 @@ struct ChatHistory{
 enum Message {
     MessageChanged(String),
     MessagePosted,
-    Cleared
+    Cleared,
+    IpStringInput(String),
+    StartConnection,
 }
 
 impl Application for ChatBox {
@@ -78,7 +82,9 @@ impl Application for ChatBox {
             }
             Message::Cleared => {
                 self.input_value.clear();
-            }
+            },
+            Message::IpStringInput(input_addr) => {},
+            Message::StartConnection => {},
         }
         Command::none()
     }
@@ -134,10 +140,25 @@ impl Application for ChatBox {
             .align_items(Align::End)
             .width(Length::Fill);
 
+        let input_target_ip = TextInput::new(
+            &mut self.input_ip,
+            "127.0.0.1",
+            &self.input_ip_value,
+            Message::IpStringInput,
+        );
+
+        let connect_button = Button::new(
+            &mut self.connect_button,
+            Text::new("Connect")
+        )
+        .on_press(Message::StartConnection);
+
         Column::new()
             .padding(20)
             .push(header_title)
             .push(scrollable_history)
+            .push(input_target_ip)
+            .push(connect_button)
             .push(
                 TextInput::new(
                     &mut self.input,
