@@ -20,9 +20,12 @@ struct Chat {
 struct ChatBox {
     input: text_input::State,
     input_value: String,
+    input_ip: text_input::State,
+    input_ip_value: String,
     chat_history: ChatHistory,
     post_button: button::State,
     clear_button: button::State,
+    connect_button: button::State,
 }
 
 // Chat history
@@ -36,7 +39,10 @@ struct ChatHistory{
 enum Message {
     MessageChanged(String),
     MessagePosted,
-    Cleared
+    Cleared,
+    IpStringInput(String),
+    Connecting,
+    Connected,
 }
 
 impl Application for ChatBox {
@@ -76,7 +82,12 @@ impl Application for ChatBox {
             }
             Message::Cleared => {
                 self.input_value.clear();
-            }
+            },
+            Message::IpStringInput(input_addr) => {
+                self.input_ip_value = input_addr;
+            },
+            Message::Connecting => {},
+            Message::Connected => {},
         }
         Command::none()
     }
@@ -118,8 +129,13 @@ impl Application for ChatBox {
             );
 
         let operation_buttons = Column::new()
+            .padding(5)
+            .spacing(5)
+            .align_items(Align::End)
+            .width(Length::Fill)
             .push(
                 Row::new()
+                    .spacing(10)
                     .push(
                         Button::new(&mut self.post_button, Text::new("Post"))
                             .on_press(Message::MessagePosted)
@@ -128,14 +144,38 @@ impl Application for ChatBox {
                         Button::new(&mut self.clear_button, Text::new("Clear"))
                             .on_press(Message::Cleared)
                     )
-            )
+            );
+
+        let connect_setting = Column::new()
+            .padding(5)
+            .width(Length::Fill)
             .align_items(Align::End)
-            .width(Length::Fill);
+            .push(
+                Row::new()
+                    .spacing(10)
+                    .push(
+                        TextInput::new(
+                            &mut self.input_ip,
+                            "127.0.0.1",
+                            &self.input_ip_value,
+                            Message::IpStringInput,
+                        )
+                            .width(Length::Units(150))
+                            .padding(10)
+                            .on_submit(Message::Connecting)
+                    )
+                    .push(
+                        Button::new(&mut self.connect_button, Text::new("Connect"))
+                            .padding(10)
+                            .on_press(Message::Connecting)
+                    )
+            );
 
         Column::new()
             .padding(20)
             .push(header_title)
             .push(scrollable_history)
+            .push(connect_setting)
             .push(
                 TextInput::new(
                     &mut self.input,
