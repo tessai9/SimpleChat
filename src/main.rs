@@ -4,15 +4,10 @@ use iced::{
     Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row, Rectangle
 };
 
+mod p2p_node;
+
 fn main() {
     ChatBox::run(Settings::default());
-}
-
-// Single chat
-#[derive(Debug)]
-struct Chat {
-    post_date: Date<Local>,
-    text: String,
 }
 
 // Chat box
@@ -33,6 +28,13 @@ struct ChatBox {
 struct ChatHistory{
     scroll: scrollable::State,
     chats: Vec<Chat>,
+}
+
+// Single chat
+#[derive(Debug)]
+struct Chat {
+    post_date: Date<Local>,
+    text: String,
 }
 
 #[derive(Debug, Clone)]
@@ -86,7 +88,9 @@ impl Application for ChatBox {
             Message::IpStringInput(input_addr) => {
                 self.input_ip_value = input_addr;
             },
-            Message::Connecting => {},
+            Message::Connecting => {
+                p2p_node::make_connection(&self.input_ip_value);
+            },
             Message::Connected => {},
         }
         Command::none()
