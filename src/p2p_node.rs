@@ -6,16 +6,11 @@ use libp2p::{
     NetworkBehaviour,
     mdns::{Mdns, MdnsEvent},
     floodsub::{self, Floodsub, FloodsubEvent},
+    swarm::NetworkBehaviourEventProcess,
     Transport,
     tcp::TcpConfig,
     identity::ed25519::Keypair
 };
-
-
-#[derive(Debug, Clone)]
-pub struct P2pNode {
-    target_addr: Multiaddr,
-}
 
 pub fn make_connection(target_addr: &str) {
     let mut addr = format!("{}{}{}", "/ip4/", target_addr.to_string(), "/tcp/20500");
@@ -48,4 +43,37 @@ pub fn create_client(target_addr: &str) {
         #[allow(dead_code)]
         ignored_member: bool,
     }
+
+    // network event for floodsub
+    impl NetworkBehaviourEventProcess<FloodsubEvent> for NodeBehaviour {
+        fn inject_event(&mut self, message: FloodsubEvent) {
+            if let FloodsubEvent::Message(message) = message {
+                &message.data
+            }
+        }
+    }
+
+    // network event for mDNS
+    impl NetworkBehaviourEventProcess<MdnsEvent> for NodeBehaviour {
+        fn inject_event(&mut self, event: MdnsEvent) {
+            match event {
+                MdnsEvent::Discovered(list) => {
+                    for (peer, _) in list {
+                        if !self.mdns.has_node(&peer) {
+                            self.floodsub.add_node_to_partial_view(peer);
+                        }
+                    }
+                }
+                MdnsEvent::Expired(list) => {
+                    for (peer, _) in list {
+                        if !self.mdns.has_node(&peer) {
+                            self.floodsub.remove_node_from_partial_view(&peer)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // create DTH(Swarm)
 }
