@@ -3226,7 +3226,9 @@ name = "sample_gui"
 version = "0.1.0"
 dependencies = [
  "assert-type-eq",
+ "async-std",
  "chrono",
+ "futures 0.3.5",
  "iced",
  "libp2p",
 ]
