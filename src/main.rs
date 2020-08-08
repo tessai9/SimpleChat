@@ -3,10 +3,14 @@ use iced::{
     Application, Text, text_input, TextInput, button, Button, Settings, Column, Align, Element,
     Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row
 };
+use std::thread;
 
 mod p2p_node;
 
 fn main() {
+    thread::spawn(|| {
+        p2p_node::create_client("0.0.0.0");
+    });
     ChatBox::run(Settings::default());
 }
 
@@ -88,9 +92,7 @@ impl Application for ChatBox {
             Message::IpStringInput(input_addr) => {
                 self.input_ip_value = input_addr;
             },
-            Message::Connecting => {
-                p2p_node::make_connection(&self.input_ip_value);
-            },
+            Message::Connecting => {},
             Message::Connected => {},
         }
         Command::none()
