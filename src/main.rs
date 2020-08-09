@@ -3,14 +3,14 @@ use iced::{
     Application, Text, text_input, TextInput, button, Button, Settings, Column, Align, Element,
     Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row
 };
-use std::thread;
-
+use libp2p::{
+    floodsub::{self, Floodsub},
+    Swarm,
+    PeerId,
+};
 mod p2p_node;
 
 fn main() {
-    thread::spawn(|| {
-        p2p_node::create_client("0.0.0.0");
-    });
     ChatBox::run(Settings::default());
 }
 
@@ -25,6 +25,7 @@ struct ChatBox {
     post_button: button::State,
     clear_button: button::State,
     connect_button: button::State,
+    p2p_node: p2p_node::NodeBehaviour,
 }
 
 // Chat history
@@ -92,7 +93,17 @@ impl Application for ChatBox {
             Message::IpStringInput(input_addr) => {
                 self.input_ip_value = input_addr;
             },
-            Message::Connecting => {},
+            Message::Connecting => {
+                // Floodsub, mDNS, KeyPairにCopy Traitが実装されていないからエラーになる・・・
+                let mut swarm = {
+                    let _transport = libp2p::build_development_transport(self.p2p_node.keypair).expect("failed to build transport");
+                    let floodsub_topic = floodsub::Topic::new("chat-topic");
+                    self.p2p_node.floodsub.subscribe(floodsub_topic.clone());
+                    Swarm::new(_transport, self.p2p_node, PeerId::from(self.p2p_node.keypair.public()))
+                };
+                let addr = format!("{}{}{}", "/ip4/", self.input_ip_value.to_string(), "/tcp/0");
+                Swarm::listen_on(&mut swarm, addr.parse().expect("invalid address")).expect("failed to listen");
+            },
             Message::Connected => {},
         }
         Command::none()
