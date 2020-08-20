@@ -3,7 +3,6 @@ use iced::{
     Application, Text, text_input, TextInput, button, Button, Settings, Column, Align, Element,
     Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row, Rectangle
 };
-
 mod p2p_node;
 
 fn main() {
@@ -89,7 +88,7 @@ impl Application for ChatBox {
                 self.input_ip_value = input_addr;
             },
             Message::Connecting => {
-                p2p_node::make_connection(&self.input_ip_value);
+                p2p_node::subscribe_swarm(self.input_ip_value.to_string());
             },
             Message::Connected => {},
         }

@@ -1,5 +1,5 @@
 [package]
-name = "sample_gui"
+name = "simple_chat"
 version = "0.1.0"
 authors = ["tesao <shimeji9@gmail.com>"]
 edition = "2018"
@@ -9,3 +9,7 @@ edition = "2018"
 [dependencies]
 iced = "0.1.1"
 chrono = "0.4.13"
+libp2p = "0.22.0"
+assert-type-eq = "0.1.0"
+futures = "0.3.5"
+async-std = "1.6.2"

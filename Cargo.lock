@@ -1682,12 +1682,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "sample_gui"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "iced",
-]
+name = "scoped-tls"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea6a9290e3c9cf0f18145ef7ffa62d68ee0bf5fcd651017e586dc7fd5da448c2"
 
 [[package]]
 name = "scopeguard"
@@ -1755,6 +1753,24 @@ checksum = "5a9e7e0f2bfae24d8a5b5a66c5b257a83c7412304311512a0c054cd5e619da11"
 dependencies = [
  "lazy_static",
  "libc",
+]
+
+[[package]]
+name = "signature"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65211b7b6fc3f14ff9fc7a2011a434e3e6880585bd2e9e9396315ae24cbf7852"
+
+[[package]]
+name = "simple_chat"
+version = "0.1.0"
+dependencies = [
+ "assert-type-eq",
+ "async-std",
+ "chrono",
+ "futures 0.3.5",
+ "iced",
+ "libp2p",
 ]
 
 [[package]]
