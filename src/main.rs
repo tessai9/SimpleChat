@@ -1,7 +1,7 @@
 use chrono::{ Date, Local };
 use iced::{
     Application, Text, text_input, TextInput, button, Button, Settings, Column, Align, Element,
-    Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row, Rectangle
+    Command, Scrollable, scrollable, Container, Length, HorizontalAlignment, Row
 };
 mod p2p_node;
 
