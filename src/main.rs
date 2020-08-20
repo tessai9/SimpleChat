@@ -20,6 +20,7 @@ struct ChatBox {
     post_button: button::State,
     clear_button: button::State,
     connect_button: button::State,
+    connection: ConnectionState,
 }
 
 // Chat history
@@ -44,6 +45,19 @@ enum Message {
     IpStringInput(String),
     Connecting,
     Connected,
+}
+
+
+enum ConnectionState {
+    Disconnected,
+    Connecting,
+    Connected,
+}
+
+impl Default for ConnectionState {
+    fn default() -> Self {
+        ConnectionState::Disconnected
+    }
 }
 
 impl Application for ChatBox {
@@ -88,9 +102,12 @@ impl Application for ChatBox {
                 self.input_ip_value = input_addr;
             },
             Message::Connecting => {
+                self.connection = ConnectionState::Connecting;
                 p2p_node::subscribe_swarm(self.input_ip_value.to_string());
             },
-            Message::Connected => {},
+            Message::Connected => {
+                self.connection = ConnectionState::Connected;
+            },
         }
         Command::none()
     }
