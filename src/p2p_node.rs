@@ -1,9 +1,9 @@
 // P2P Node Behavior
 use libp2p::{
+    Multiaddr,
     PeerId,
     NetworkBehaviour,
     Swarm,
-    Transport,
     mdns::{Mdns, MdnsEvent},
     floodsub::{self, Floodsub, FloodsubEvent},
     swarm::NetworkBehaviourEventProcess,
@@ -14,21 +14,6 @@ use libp2p::{
 pub struct NodeBehaviour {
     pub floodsub: Floodsub,
     mdns: Mdns,
-    #[behaviour(ignore)]
-    #[allow(dead_code)]
-    pub keypair: identity::Keypair,
-}
-
-impl Default for NodeBehaviour {
-    fn default() -> Self {
-        let local_key = identity::Keypair::generate_ed25519();
-        let local_peer_id = PeerId::from(local_key.public());
-        NodeBehaviour {
-            floodsub: Floodsub::new(local_peer_id.clone()),
-            mdns: Mdns::new().expect("failed to build behaviour"),
-            keypair: local_key,
-        }
-    }
 }
 
 // network event for floodsub
@@ -65,64 +50,22 @@ impl NetworkBehaviourEventProcess<MdnsEvent> for NodeBehaviour {
     }
 }
 
-pub fn create_connection(behaviour: NodeBehaviour) {
-    let _transport = libp2p::build_development_transport(behaviour.keypair).expect("failed to build transport");
-    // create floodsub topic
-    let floodsub_topic = floodsub::Topic::new("chat-topic");
-}
-
-// create topic
-pub fn create_client() {
+pub fn subscribe_swarm(to_dial: String) {
     let local_key = identity::Keypair::generate_ed25519();
-    let local_peer_id = PeerId::from(local_key.public());
+    let _local_peer_id = PeerId::from(local_key.public());
     let _transport = libp2p::build_development_transport(local_key).expect("failed to build transport");
+    let _floodsub_topic = floodsub::Topic::new("chat-topic");
 
-    // create floodsub topic
-    let floodsub_topic = floodsub::Topic::new("chat-topic");
+    let mut swarm = {
+        let mut behaviour = NodeBehaviour {
+            floodsub: Floodsub::new(_local_peer_id.clone()),
+            mdns: Mdns::new().expect("failed to build behaviour"),
+        };
+        behaviour.floodsub.subscribe(_floodsub_topic.clone());
+        Swarm::new(_transport, behaviour, PeerId::from(_local_peer_id))
+    };
+    Swarm::listen_on(&mut swarm, "/ip4/0.0.0.0/tcp/0".parse().expect("Failed to parse")).expect("failed to listen");
 
-
-    // // create Swarm
-    // let mut swarm = {
-    //     let mdns = Mdns::new().expect("failed to build behaviour");
-    //     let mut behaviour = NodeBehaviour {
-    //         floodsub: Floodsub::new(local_peer_id.clone()),
-    //         mdns,
-    //     };
-
-    //     behaviour.floodsub.subscribe(floodsub_topic.clone());
-    //     Swarm::new(_transport, behaviour, local_peer_id)
-    // };
-
-    // let addr = format!("{}{}{}", "/ip4/", target_addr.to_string(), "/tcp/0");
-    // Swarm::listen_on(&mut swarm, addr.parse().expect("invalid address")).expect("failed to listen");
-
-    // swarm
-
-    // // Kick it off
-    // let mut listening = false;
-    // task::block_on(future::poll_fn(move |cx: &mut Context<'_>| {
-    //     loop {
-    //         match stdin.try_poll_next_unpin(cx)? {
-    //             Poll::Ready(Some(line)) => swarm.floodsub.publish(floodsub_topic.clone(), line.as_bytes()),
-    //             Poll::Ready(None) => panic!("Stdin closed"),
-    //             Poll::Pending => break
-    //         }
-    //     }
-    //     loop {
-    //         match swarm.poll_next_unpin(cx) {
-    //             Poll::Ready(Some(event)) => println!("{:?}", event),
-    //             Poll::Ready(None) => return Poll::Ready(Ok(())),
-    //             Poll::Pending => {
-    //                 if !listening {
-    //                     for addr in Swarm::listeners(&swarm) {
-    //                         println!("Listening on {:?}", addr);
-    //                         listening = true;
-    //                     }
-    //                 }
-    //                 break
-    //             }
-    //         }
-    //     }
-    //     Poll::Pending
-    // }))
+    let addr: Multiaddr =  format!("/ip4/{}/tcp/24915", to_dial).parse().expect("Invalid IP");
+    Swarm::dial_addr(&mut swarm, addr).expect("Failed to dial");
 }
