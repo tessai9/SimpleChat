@@ -9,10 +9,11 @@ use libp2p::{
     swarm::NetworkBehaviourEventProcess,
     identity,
 };
+use async_std::task;
 
 #[derive(NetworkBehaviour)]
 pub struct NodeBehaviour {
-    pub floodsub: Floodsub,
+    floodsub: Floodsub,
     mdns: Mdns,
 }
 
@@ -65,7 +66,11 @@ pub fn subscribe_swarm(to_dial: String) {
         Swarm::new(_transport, behaviour, PeerId::from(_local_peer_id))
     };
     Swarm::listen_on(&mut swarm, "/ip4/0.0.0.0/tcp/0".parse().expect("Failed to parse")).expect("failed to listen");
+    println!("start to listening");
 
-    let addr: Multiaddr =  format!("/ip4/{}/tcp/24915", to_dial).parse().expect("Invalid IP");
-    Swarm::dial_addr(&mut swarm, addr).expect("Failed to dial");
+    if to_dial.len() > 0 {
+        let addr: Multiaddr =  format!("/ip4/{}/tcp/24915", to_dial).parse().expect("Invalid IP");
+        Swarm::dial_addr(&mut swarm, addr).expect("Failed to dial");
+        println!("dialed to {}", to_dial);
+    }
 }
